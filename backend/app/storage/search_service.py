@@ -2,7 +2,8 @@
 SearchService — hybrid search (vector + keyword) over Neo4j graph data.
 
 Replaces Zep Cloud's built-in search with reranker.
-Scoring: 0.7 * vector_score + 0.3 * keyword_score (BM25 via fulltext index).
+Scoring: VECTOR_WEIGHT * vector_score + KEYWORD_WEIGHT * keyword_score (BM25 via fulltext index).
+Weights are configurable via SEARCH_VECTOR_WEIGHT / SEARCH_KEYWORD_WEIGHT env vars (default 0.7/0.3).
 """
 
 import logging
@@ -11,6 +12,7 @@ from typing import List, Dict, Any, Optional
 from neo4j import Session as Neo4jSession
 
 from .embedding_service import EmbeddingService
+from ..config import Config
 
 logger = logging.getLogger('mirofish.search')
 
@@ -58,11 +60,10 @@ LIMIT $limit
 class SearchService:
     """Hybrid search combining vector similarity and keyword matching."""
 
-    VECTOR_WEIGHT = 0.7
-    KEYWORD_WEIGHT = 0.3
-
     def __init__(self, embedding_service: EmbeddingService):
         self.embedding = embedding_service
+        self.VECTOR_WEIGHT = Config.SEARCH_VECTOR_WEIGHT
+        self.KEYWORD_WEIGHT = Config.SEARCH_KEYWORD_WEIGHT
 
     def search_edges(
         self,

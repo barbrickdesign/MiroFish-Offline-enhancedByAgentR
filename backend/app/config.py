@@ -69,6 +69,10 @@ class Config:
     REPORT_AGENT_MAX_REFLECTION_ROUNDS = int(os.environ.get('REPORT_AGENT_MAX_REFLECTION_ROUNDS', '2'))
     REPORT_AGENT_TEMPERATURE = float(os.environ.get('REPORT_AGENT_TEMPERATURE', '0.5'))
 
+    # Hybrid search weights (must sum to 1.0)
+    SEARCH_VECTOR_WEIGHT = float(os.environ.get('SEARCH_VECTOR_WEIGHT', '0.7'))
+    SEARCH_KEYWORD_WEIGHT = float(os.environ.get('SEARCH_KEYWORD_WEIGHT', '0.3'))
+
     @classmethod
     def validate(cls):
         """Validate required configuration"""
@@ -79,4 +83,9 @@ class Config:
             errors.append("NEO4J_URI not configured")
         if not cls.NEO4J_PASSWORD:
             errors.append("NEO4J_PASSWORD not configured")
+        total = cls.SEARCH_VECTOR_WEIGHT + cls.SEARCH_KEYWORD_WEIGHT
+        if abs(total - 1.0) > 0.001:
+            errors.append(
+                f"SEARCH_VECTOR_WEIGHT + SEARCH_KEYWORD_WEIGHT must equal 1.0 (currently {total:.3f})"
+            )
         return errors
